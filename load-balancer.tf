@@ -16,8 +16,8 @@ module "alb_controller_irsa" {
   namespace = "kube-system"
   service_account_name = "aws-load-balancer-controller"
   policy_arn = aws_iam_policy.alb_controller.arn
-  oidc_provider_arn = aws_iam_openid_connect_provider.eks.arn
-  oidc_provider_url = aws_iam_openid_connect_provider.eks.url
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
 }
 
 resource "helm_release" "alb_controller" {
@@ -29,7 +29,7 @@ resource "helm_release" "alb_controller" {
 
   set {
     name  = "clusterName"
-    value = aws_eks_cluster.main.name
+    value = module.eks.cluster_name
   }
   set {
     name  = "serviceAccount.create"
@@ -48,5 +48,5 @@ resource "helm_release" "alb_controller" {
     value = aws_vpc.main.id
   }
 
-  depends_on = [aws_eks_node_group.main]
+  depends_on = [module.eks]
 }

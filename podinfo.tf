@@ -21,5 +21,5 @@ resource "helm_release" "podinfo" {
     }
   })]
 
-  depends_on = [aws_eks_node_group.main]
+  depends_on = [module.eks]
 }

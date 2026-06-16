@@ -1,0 +1,20 @@
+output "cluster_name" {
+  value = aws_eks_cluster.main.name
+}
+
+output "cluster_endpoint" {
+  value = aws_eks_cluster.main.endpoint
+}
+
+output "cluster_ca_certificate" {
+  description = "Base64-encoded CA bundle, suitable for kubernetes/helm provider configuration."
+  value = aws_eks_cluster.main.certificate_authority[0].data
+}
+
+output "oidc_provider_arn" {
+  value = aws_iam_openid_connect_provider.eks.arn
+}
+
+output "oidc_provider_url" {
+  value = aws_iam_openid_connect_provider.eks.url
+}

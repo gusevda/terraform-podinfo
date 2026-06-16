@@ -23,8 +23,8 @@ module "external_dns_irsa" {
   namespace            = "kube-system"
   service_account_name = "external-dns"
   policy_arn           = aws_iam_policy.external_dns.arn
-  oidc_provider_arn    = aws_iam_openid_connect_provider.eks.arn
-  oidc_provider_url    = aws_iam_openid_connect_provider.eks.url
+  oidc_provider_arn    = module.eks.oidc_provider_arn
+  oidc_provider_url    = module.eks.oidc_provider_url
 }
 
 resource "helm_release" "external_dns" {
@@ -59,5 +59,5 @@ resource "helm_release" "external_dns" {
     value = var.domain_name
   }
 
-  depends_on = [aws_eks_node_group.main]
+  depends_on = [module.eks]
 }
