@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars and fill in.
+profile             = "your-aws-profile"
+region              = "us-east-2"
+kubeconfig_admin_ip = "1.2.3.4/32"   # `curl ifconfig.me`/32
+domain_name         = "podinfo.example.com"
+subdomain           = "podinfo.example.com"
