@@ -16,46 +16,15 @@ resource "aws_iam_policy" "external_dns" {
   policy = data.aws_iam_policy_document.external_dns.json
 }
 
-# IRSA role + SA + Helm release
+module "external_dns_irsa" {
+  source = "./modules/irsa-role"
 
-data "aws_iam_policy_document" "external_dns_trust" {
-  statement {
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-    principals {
-      type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.eks.arn]
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub"
-      values   = ["system:serviceaccount:kube-system:external-dns"]
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:aud"
-      values   = ["sts.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "external_dns" {
-  name               = "${var.name}-external-dns"
-  assume_role_policy = data.aws_iam_policy_document.external_dns_trust.json
-}
-
-resource "aws_iam_role_policy_attachment" "external_dns" {
-  role       = aws_iam_role.external_dns.name
-  policy_arn = aws_iam_policy.external_dns.arn
-}
-
-resource "kubernetes_service_account" "external_dns" {
-  metadata {
-    name      = "external-dns"
-    namespace = "kube-system"
-    annotations = {
-      "eks.amazonaws.com/role-arn" = aws_iam_role.external_dns.arn
-    }
-  }
+  name                 = "${var.name}-external-dns"
+  namespace            = "kube-system"
+  service_account_name = "external-dns"
+  policy_arn           = aws_iam_policy.external_dns.arn
+  oidc_provider_arn    = aws_iam_openid_connect_provider.eks.arn
+  oidc_provider_url    = aws_iam_openid_connect_provider.eks.url
 }
 
 resource "helm_release" "external_dns" {
@@ -71,7 +40,7 @@ resource "helm_release" "external_dns" {
   }
   set {
     name  = "serviceAccount.name"
-    value = kubernetes_service_account.external_dns.metadata[0].name
+    value = module.external_dns_irsa.service_account_name
   }
   set {
     name  = "provider"
@@ -89,4 +58,6 @@ resource "helm_release" "external_dns" {
     name  = "domainFilters[0]"
     value = var.domain_name
   }
+
+  depends_on = [aws_eks_node_group.main]
 }

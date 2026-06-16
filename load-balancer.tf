@@ -9,49 +9,15 @@ resource "aws_iam_policy" "alb_controller" {
   policy = data.http.alb_controller_policy.response_body
 }
 
-data "aws_iam_policy_document" "alb_controller_assume" {
-  statement {
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-    effect  = "Allow"
+module "alb_controller_irsa" {
+  source = "./modules/irsa-role"
 
-    principals {
-      type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.eks.arn]
-    }
-
-    condition {
-      test     = "StringEquals"
-      variable = "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub"
-      values   = ["system:serviceaccount:kube-system:aws-load-balancer-controller"]
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:aud"
-      values   = ["sts.amazonaws.com"]
-    }
-  }
-}
-
-# IRSA role + SA + Helm release
-
-resource "aws_iam_role" "alb_controller" {
-  name               = "${var.name}-alb-controller"
-  assume_role_policy = data.aws_iam_policy_document.alb_controller_assume.json
-}
-
-resource "aws_iam_role_policy_attachment" "alb_controller" {
-  role       = aws_iam_role.alb_controller.name
+  name = "${var.name}-alb-controller"
+  namespace = "kube-system"
+  service_account_name = "aws-load-balancer-controller"
   policy_arn = aws_iam_policy.alb_controller.arn
-}
-
-resource "kubernetes_service_account" "alb_controller" {
-  metadata {
-    name      = "aws-load-balancer-controller"
-    namespace = "kube-system"
-    annotations = {
-      "eks.amazonaws.com/role-arn" = aws_iam_role.alb_controller.arn
-    }
-  }
+  oidc_provider_arn = aws_iam_openid_connect_provider.eks.arn
+  oidc_provider_url = aws_iam_openid_connect_provider.eks.url
 }
 
 resource "helm_release" "alb_controller" {
@@ -71,7 +37,7 @@ resource "helm_release" "alb_controller" {
   }
   set {
     name  = "serviceAccount.name"
-    value = kubernetes_service_account.alb_controller.metadata[0].name
+    value = module.alb_controller_irsa.service_account_name
   }
   set {
     name  = "region"
