@@ -59,5 +59,12 @@ resource "helm_release" "external_dns" {
     value = var.domain_name
   }
 
-  depends_on = [module.eks]
+  # NAT egress must outlive external-dns — on destroy it still needs to reach
+  # the Route 53 API to delete records before its helm release goes.
+  depends_on = [
+    module.eks,
+    aws_nat_gateway.main,
+    aws_route_table_association.private,
+    aws_route_table_association.public,
+  ]
 }

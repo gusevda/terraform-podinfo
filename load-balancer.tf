@@ -48,5 +48,12 @@ resource "helm_release" "alb_controller" {
     value = aws_vpc.main.id
   }
 
-  depends_on = [module.eks]
+  # NAT egress must outlive the controller — on destroy the controller still
+  # needs to reach the ELB API to delete the ALB before its helm release goes.
+  depends_on = [
+    module.eks,
+    aws_nat_gateway.main,
+    aws_route_table_association.private,
+    aws_route_table_association.public,
+  ]
 }
