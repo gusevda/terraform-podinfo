@@ -84,12 +84,14 @@ variables.tf       # input variables
 locals.tf          # shared tags
 outputs.tf         # stack outputs
 networking.tf      # VPC, subnets, IGW, NAT, route tables
-cluster.tf         # EKS cluster + managed node group + IAM
-addons.tf          # vpc-cni / coredns / kube-proxy
-irsa.tf            # OIDC provider for IRSA
-load-balancer.tf   # AWS Load Balancer Controller (IAM + Helm)
-external-dns.tf    # ExternalDNS (IAM + Helm)
+eks.tf             # EKS module invocation (cluster, node group, add-ons, OIDC)
+load-balancer.tf   # AWS Load Balancer Controller (IRSA + Helm)
+external-dns.tf    # ExternalDNS (IRSA + Helm)
 dns.tf             # Route 53 zone + ACM certificate
 ingress.tf         # Ingress object for podinfo
 podinfo.tf         # podinfo Helm release
+
+modules/
+  eks/             # EKS cluster + managed node group + IAM + add-ons + OIDC
+  irsa-role/       # Reusable IAM role + policy + service account for IRSA
 ```
