@@ -23,8 +23,8 @@ module "external_dns_irsa" {
   namespace            = "kube-system"
   service_account_name = "external-dns"
   policy_arn           = aws_iam_policy.external_dns.arn
-  oidc_provider_arn    = module.eks.oidc_provider_arn
-  oidc_provider_url    = module.eks.oidc_provider_url
+  oidc_provider_arn    = local.oidc_provider_arn
+  oidc_provider_url    = local.oidc_provider_url
 }
 
 resource "helm_release" "external_dns" {
@@ -58,13 +58,4 @@ resource "helm_release" "external_dns" {
     name  = "domainFilters[0]"
     value = var.domain_name
   }
-
-  # NAT egress must outlive external-dns — on destroy it still needs to reach
-  # the Route 53 API to delete records before its helm release goes.
-  depends_on = [
-    module.eks,
-    aws_nat_gateway.main,
-    aws_route_table_association.private,
-    aws_route_table_association.public,
-  ]
 }

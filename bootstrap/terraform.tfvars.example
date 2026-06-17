@@ -1,0 +1,4 @@
+# Copy to terraform.tfvars and fill in.
+profile             = "your-aws-profile"
+region              = "us-east-2"
+subdomain           = "podinfo.example.com"

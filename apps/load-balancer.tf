@@ -16,8 +16,8 @@ module "alb_controller_irsa" {
   namespace = "kube-system"
   service_account_name = "aws-load-balancer-controller"
   policy_arn = aws_iam_policy.alb_controller.arn
-  oidc_provider_arn = module.eks.oidc_provider_arn
-  oidc_provider_url = module.eks.oidc_provider_url
+  oidc_provider_arn = local.oidc_provider_arn
+  oidc_provider_url = local.oidc_provider_url
 }
 
 resource "helm_release" "alb_controller" {
@@ -29,7 +29,7 @@ resource "helm_release" "alb_controller" {
 
   set {
     name  = "clusterName"
-    value = module.eks.cluster_name
+    value = local.cluster_name
   }
   set {
     name  = "serviceAccount.create"
@@ -45,15 +45,6 @@ resource "helm_release" "alb_controller" {
   }
   set {
     name  = "vpcId"
-    value = aws_vpc.main.id
+    value = local.vpc_id
   }
-
-  # NAT egress must outlive the controller — on destroy the controller still
-  # needs to reach the ELB API to delete the ALB before its helm release goes.
-  depends_on = [
-    module.eks,
-    aws_nat_gateway.main,
-    aws_route_table_association.private,
-    aws_route_table_association.public,
-  ]
 }

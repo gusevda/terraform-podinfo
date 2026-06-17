@@ -20,6 +20,4 @@ resource "helm_release" "podinfo" {
       limits   = { cpu = "200m", memory = "128Mi" }
     }
   })]
-
-  depends_on = [module.eks]
 }
