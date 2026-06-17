@@ -1,5 +1,14 @@
-resource "aws_route53_zone" "podinfo" {
-  name = var.subdomain
+data "terraform_remote_state" "bootstrap" {
+  backend = "s3"
+  config = {
+    bucket = "podinfo-tfstate-52133295"
+    key    = "bootstrap/terraform.tfstate"
+    region = "us-east-2"
+  }
+}
+
+locals {
+  zone_id = data.terraform_remote_state.bootstrap.outputs.zone_id
 }
 
 resource "aws_acm_certificate" "podinfo" {
@@ -20,7 +29,7 @@ resource "aws_route53_record" "podinfo_cert_validation" {
     }
   }
 
-  zone_id = aws_route53_zone.podinfo.zone_id
+  zone_id = local.zone_id
   name    = each.value.name
   type    = each.value.type
   records = [each.value.record]

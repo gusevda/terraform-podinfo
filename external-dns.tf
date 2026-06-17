@@ -3,7 +3,7 @@
 data "aws_iam_policy_document" "external_dns" {
   statement {
     actions   = ["route53:ChangeResourceRecordSets"]
-    resources = ["arn:aws:route53:::hostedzone/${aws_route53_zone.podinfo.zone_id}"]
+    resources = ["arn:aws:route53:::hostedzone/${local.zone_id}"]
   }
   statement {
     actions   = ["route53:ListHostedZones", "route53:ListResourceRecordSets", "route53:ListTagsForResource"]

@@ -10,8 +10,3 @@ output "kubeconfig_update_command" {
 output "podinfo_url" {
   value = "https://${var.subdomain}"
 }
-
-output "podinfo_zone_nameservers" {
-  description = "Add these as NS records for 'podinfo' in GoDaddy."
-  value       = aws_route53_zone.podinfo.name_servers
-}
