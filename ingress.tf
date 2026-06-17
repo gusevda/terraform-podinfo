@@ -3,14 +3,14 @@ resource "kubernetes_ingress_v1" "podinfo" {
     name      = "podinfo"
     namespace = "podinfo"
     annotations = {
-      "alb.ingress.kubernetes.io/scheme"            = "internet-facing"
-      "alb.ingress.kubernetes.io/target-type"       = "ip"
-      "alb.ingress.kubernetes.io/listen-ports"      = jsonencode([{ HTTP = 80 }, { HTTPS = 443 }])
-      "alb.ingress.kubernetes.io/ssl-redirect"      = "443"
-      "alb.ingress.kubernetes.io/certificate-arn"   = aws_acm_certificate_validation.podinfo.certificate_arn
-      "alb.ingress.kubernetes.io/healthcheck-path"  = "/healthz"
-      "alb.ingress.kubernetes.io/healthcheck-port"  = "9898"
-      "external-dns.alpha.kubernetes.io/hostname"   = var.subdomain
+      "alb.ingress.kubernetes.io/scheme"           = "internet-facing"
+      "alb.ingress.kubernetes.io/target-type"      = "ip"
+      "alb.ingress.kubernetes.io/listen-ports"     = jsonencode([{ HTTP = 80 }, { HTTPS = 443 }])
+      "alb.ingress.kubernetes.io/ssl-redirect"     = "443"
+      "alb.ingress.kubernetes.io/certificate-arn"  = aws_acm_certificate_validation.podinfo.certificate_arn
+      "alb.ingress.kubernetes.io/healthcheck-path" = "/healthz"
+      "alb.ingress.kubernetes.io/healthcheck-port" = "9898"
+      "external-dns.alpha.kubernetes.io/hostname"  = var.subdomain
     }
   }
 
@@ -21,7 +21,7 @@ resource "kubernetes_ingress_v1" "podinfo" {
       host = var.subdomain
       http {
         path {
-          path     = "/"
+          path      = "/"
           path_type = "Prefix"
           backend {
             service {
@@ -34,10 +34,15 @@ resource "kubernetes_ingress_v1" "podinfo" {
     }
   }
 
+  # IRSA modules are listed here so that on `terraform destroy` the ingress
+  # is fully removed (ALB cleaned up by alb-controller, DNS record cleaned up
+  # by external-dns) before either controller loses its IAM permissions.
   depends_on = [
     helm_release.podinfo,
     helm_release.alb_controller,
     helm_release.external_dns,
     aws_acm_certificate_validation.podinfo,
+    module.alb_controller_irsa,
+    module.external_dns_irsa,
   ]
 }
