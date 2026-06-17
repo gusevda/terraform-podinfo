@@ -43,7 +43,7 @@ variable "node_group_scaling" {
 }
 
 variable "node_group_extra_depends_on" {
-  description = "Extra root-level resources the node group must wait on (e.g. NAT gateway, route-table associations). Pass-through to the node group's depends_on via a terraform_data sync point. Typed `any` (not `list(any)`) so callers can pass a tuple mixing single resources and count/for_each lists. Don't use module-level depends_on for this — it forces all module outputs unknown at plan time and breaks providers that consume them."
-  type        = any
+  description = "Extra resource IDs the node group must wait on (e.g. NAT gateway, route-table associations). Threaded through terraform_data as a sync point — pass IDs, not whole resource objects, so the input has a stable string shape and doesn't trip the 'inconsistent final plan' bug on resources with optional unset attributes. Don't use module-level depends_on for this — it forces all module outputs unknown at plan time and breaks providers that consume them."
+  type        = list(string)
   default     = []
 }

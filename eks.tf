@@ -13,8 +13,8 @@ module "eks" {
   # an input rather than module-level depends_on — the latter would mark
   # all module outputs unknown at plan time and break the kubernetes/helm
   # providers that consume them.
-  node_group_extra_depends_on = [
-    aws_route_table_association.private,
-    aws_nat_gateway.main,
-  ]
+  node_group_extra_depends_on = concat(
+    aws_route_table_association.private[*].id,
+    [aws_nat_gateway.main.id],
+  )
 }
